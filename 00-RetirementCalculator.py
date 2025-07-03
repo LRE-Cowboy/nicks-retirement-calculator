@@ -86,15 +86,10 @@ else:
 		**Key Metrics:**
 		- **Retirement Age:** {projection['retirement_age']} years
 		- **Years to Retirement:** {projection['years_to_retirement']} years
-		- **Initial Withdrawal Rate:** {inputs['comfortable_withdrawal_rate']:.1f}% (4% Rule)
+		- **Initial Withdrawal Rate:** {inputs['comfortable_withdrawal_rate']:.1f}%
 		- **Average Withdrawal Rate:** {projection['avg_withdrawal_rate']:.2f}%
 		- **Monte Carlo Success Rate:** {mc_results['success_rate']*100:.1f}%
 		- **Total Inflation Impact:** ${current_dollar_worth:.2f} current = {final_dollar_worth:.2f} at age {inputs["final_age"]}
-		
-		**4% Rule Details:**
-		- Initial withdrawal: {inputs['comfortable_withdrawal_rate']:.1f}% of portfolio at retirement
-		- Annual inflation adjustment applied to maintain purchasing power
-		- Target spending: ${inputs['retirement_spend']:,.0f} in current dollars
 		""")
 
 		# Display selected outputs
