@@ -6,6 +6,7 @@ import streamlit as st
 from fpdf import FPDF
 import plotly.graph_objs as go
 import numpy as np
+import pandas as pd
 
 # Local imports
 from inputs import get_user_inputs, validate_inputs
@@ -104,5 +105,18 @@ else:
 			st.plotly_chart(fig2)
 			
 		# Always display savings return impact section
-		st.subheader("Savings Return Rate Impact")
-		# display_varied_return_rate_impact(inputs, "savings")
+		st.subheader("Savings Rate Impact (+/- 1-5%)")
+		deltas = [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5]
+		results = []
+		for delta in deltas:
+			test_inputs = inputs.copy()
+			test_inputs["saving_rate"] = max(0, min(100, inputs["saving_rate"] + delta))
+			proj = project_retirement(test_inputs)
+			results.append({
+				"Delta": f"{delta:+d}%",
+				"Savings Rate": test_inputs["saving_rate"],
+				"Retirement Age": proj["retirement_age"],
+				"Final Net Worth": proj["net_worth"][-1]
+			})
+		df = pd.DataFrame(results)
+		st.dataframe(df, hide_index=True, use_container_width=True)
