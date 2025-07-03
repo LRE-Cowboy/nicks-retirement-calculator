@@ -15,30 +15,6 @@ from outputs import (
 	export_simulation_details, plot_income_vs_expenses_real
 )
 
-def export_outputs_to_pdf(inputs, projection, mc_results, filename="simulation_results.pdf"):
-	pdf = FPDF()
-	pdf.add_page()
-	pdf.set_font("Times", size=12)
-	pdf.cell(200, 10, txt="Retirement Calculator Simulation Results", ln=True, align="C")
-	pdf.ln(5)
-	pdf.set_font("Times", size=11)
-	pdf.cell(0, 10, txt="Key Metrics:", ln=True)
-	pdf.cell(0, 10, txt=f"Retirement Age: {projection['retirement_age']} years", ln=True)
-	pdf.cell(0, 10, txt=f"Years to Retirement: {projection['years_to_retirement']} years", ln=True)
-	pdf.cell(0, 10, txt=f"Average Withdrawal Rate: {projection['avg_withdrawal_rate']:.2f}%", ln=True)
-	pdf.cell(0, 10, txt=f"Monte Carlo Success Rate: {mc_results['success_rate']*100:.1f}%", ln=True)
-	pdf.ln(5)
-	pdf.cell(0, 10, txt="Monte Carlo Simulation Results:", ln=True)
-	pdf.cell(0, 10, txt=f"Success Rate: {mc_results['success_rate']*100:.1f}%", ln=True)
-	pdf.cell(0, 10, txt=f"Median Net Worth at Death: ${mc_results['median_net_worth']:,.0f}", ln=True)
-	pdf.cell(0, 10, txt=f"10th Percentile Net Worth at Death: ${mc_results['percentile_10_net_worth']:,.0f}", ln=True)
-	pdf.ln(5)
-	pdf.cell(0, 10, txt="NOTES:", ln=True)
-	pdf.cell(0, 10, txt="- This simulation assumes no social security or pension income", ln=True)
-	pdf.cell(0, 10, txt="- All amounts are in current dollars", ln=True)
-	pdf.cell(0, 10, txt="- Monte Carlo simulation includes random variations in growth rates and inflation", ln=True)
-	pdf.output(filename)
-
 st.title("Retirement Calculator")
 st.markdown("""
 Enter your details and assumptions below, then click **Run Simulation** to see your retirement projections.
@@ -50,7 +26,6 @@ show_net_worth_plot = st.sidebar.toggle("Net Worth vs Time Plot", value=True)
 show_income_expense_plot = st.sidebar.toggle("Income vs Expenses Plot", value=True)
 show_monte_carlo_results = st.sidebar.toggle("Monte Carlo Results", value=True)
 show_salary_plot = st.sidebar.toggle("Salary vs Time Plot", value=True)
-show_savings_return_impact = st.sidebar.toggle("Savings Return Impact", value=True)
 
 # Get user inputs
 inputs = get_user_inputs()
@@ -128,14 +103,6 @@ else:
 			)
 			st.plotly_chart(fig2)
 			
-			if st.button("Export Outputs to PDF"):
-				export_outputs_to_pdf(inputs, projection, mc_results)
-				st.success("Outputs exported to simulation_results.pdf")
-
-		if show_savings_return_impact:
-			st.subheader("Savings Return Rate Impact")
-			# display_varied_return_rate_impact(inputs, "savings")
-
-		if st.button("Export Simulation Details"):
-			export_simulation_details(inputs, combined_results)
-			st.success("Simulation exported to simulation_export.txt")
+		# Always display savings return impact section
+		st.subheader("Savings Return Rate Impact")
+		# display_varied_return_rate_impact(inputs, "savings")
