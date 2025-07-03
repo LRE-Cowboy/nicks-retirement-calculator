@@ -51,15 +51,6 @@ show_income_expense_plot = st.sidebar.toggle("Income vs Expenses Plot", value=Tr
 show_monte_carlo_results = st.sidebar.toggle("Monte Carlo Results", value=True)
 show_salary_plot = st.sidebar.toggle("Salary vs Time Plot", value=True)
 show_savings_return_impact = st.sidebar.toggle("Savings Return Impact", value=True)
-show_sensitivity_analysis = st.sidebar.toggle("Sensitivity Analysis", value=True)
-
-# Sensitivity analysis controls
-sensitivity_variable = st.sidebar.selectbox(
-	"Variable to Test (Sensitivity)",
-	["inflation", "savings_growth", "saving_rate", "raise_rate", "retirement_spend"],
-	index=0
-)
-sensitivity_delta = st.sidebar.slider("Change Amount (Sensitivity)", min_value=-10.0, max_value=10.0, value=1.0, step=0.5)
 
 # Get user inputs
 inputs = get_user_inputs()
@@ -144,21 +135,6 @@ else:
 		if show_savings_return_impact:
 			st.subheader("Savings Return Rate Impact")
 			# display_varied_return_rate_impact(inputs, "savings")
-
-		if show_sensitivity_analysis:
-			st.subheader("Sensitivity Analysis")
-			st.markdown("**Test how changes in assumptions affect your retirement plan:**")
-			if st.button("Run Sensitivity Test"):
-				sensitivity_results = sensitivity_analysis(inputs, sensitivity_variable, sensitivity_delta)
-				st.markdown(f"""
-				**Sensitivity Analysis Results:**
-				**Base Case:**
-				- Retirement Age: {projection['retirement_age']} years
-				- Success Rate: {mc_results['success_rate']*100:.1f}%
-				**With {sensitivity_variable} changed by {sensitivity_delta:+.1f}:**
-				- Retirement Age: {sensitivity_results['retirement_age']} years
-				- Change: {sensitivity_results['retirement_age'] - projection['retirement_age']:+.0f} years
-				""")
 
 		if st.button("Export Simulation Details"):
 			export_simulation_details(inputs, combined_results)

@@ -213,13 +213,4 @@ def monte_carlo_simulation(inputs: Dict[str, Any], runs: int = MonteCarloRuns) -
 		"median_net_worth": median_net_worth,
 		"percentile_10_net_worth": percentile_10_net_worth,
 		"all_net_worths": net_worths_at_death
-	}
-
-
-def sensitivity_analysis(inputs: Dict[str, Any], variable: str, delta: float) -> Dict[str, Any]:
-	"""
-	Return projection results with the specified variable changed by delta.
-	"""
-	inputs_mod = inputs.copy()
-	inputs_mod[variable] += delta
-	return project_retirement(inputs_mod) 
+	} 
