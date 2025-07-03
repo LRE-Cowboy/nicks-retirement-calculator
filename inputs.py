@@ -38,7 +38,7 @@ def get_user_inputs() -> Dict[str, Any]:
 	st.header("Retirement Calculator Inputs")
 	st.subheader("Basic Information")
 	starting_age = st.number_input("Starting Age", min_value=18, max_value=70, value=23, help=StartingAgeTooltip)
-	starting_fund = st.number_input("Starting Fund ($)", min_value=0, max_value=1_000_000, value=50000, step=1000, help=StartingFundTooltip)
+	starting_fund = st.number_input("Starting Fund ($)", min_value=0, max_value=10_000_000, value=50000, step=1000, help=StartingFundTooltip)
 	starting_salary = st.number_input("Starting Salary ($)", min_value=0, max_value=100_000_000, value=100000, step=1000, help=StartingSalaryTooltip)
 	normalized_salary_cap = st.number_input("Normalized Salary Cap ($, current dollars)", min_value=0, max_value=1_000_000, value=0, step=1000, help=NormalizedSalaryCapTooltip)
 	# Segmented control for retirement mode
