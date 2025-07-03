@@ -34,6 +34,11 @@ def project_retirement(inputs: Dict[str, Any]) -> Dict[str, Any]:
 	# Project salary over time
 	current_salary = inputs["starting_salary"]
 	for i, age in enumerate(ages):
+		# For the first year, use starting salary directly
+		if i == 0:
+			salary[i] = current_salary
+			income[i] = current_salary
+			continue
 		# Apply salary upgrades if any
 		if age in upgrade_dict:
 			upgrade_type, value = upgrade_dict[age]
@@ -41,12 +46,11 @@ def project_retirement(inputs: Dict[str, Any]) -> Dict[str, Any]:
 				current_salary *= (1 + value / 100)
 			elif upgrade_type.lower() == "absolute":
 				current_salary = value
-		# Apply annual raise (except for upgrade years)
-		if age not in upgrade_dict and i > 0:
+		else:
+			# Apply annual raise if no upgrade for this year
 			current_salary *= (1 + inputs["raise_rate"] / 100)
 		# Apply normalized salary cap (in current dollars, pre-retirement only)
-		if i > 0 and (inputs.get("normalized_salary_cap", 0) > 0):
-			# Compute inflation factor from starting_age to this year
+		if (inputs.get("normalized_salary_cap", 0) > 0):
 			cumulative_inflation = (1 + inputs["inflation"] / 100) ** (age - inputs["starting_age"])
 			nominal_cap = inputs["normalized_salary_cap"] * cumulative_inflation
 			if current_salary > nominal_cap:
@@ -59,6 +63,14 @@ def project_retirement(inputs: Dict[str, Any]) -> Dict[str, Any]:
 	
 	# Project net worth and expenses
 	net_worth[0] = inputs["starting_fund"]
+	# Calculate savings and expenses for the first year
+	annual_savings_0 = salary[0] * inputs["saving_rate"] / 100
+	emergency_expense_0 = salary[0] * inputs["emergency_fund"] / 100
+	net_savings_0 = annual_savings_0 - emergency_expense_0
+	expenses[0] = salary[0] - annual_savings_0
+	# Update net worth for the first year (after savings and growth)
+	net_worth[0] = net_worth[0] * (1 + inputs["savings_growth"] / 100) + net_savings_0
+	
 	financial_ready_age = None
 	for i in range(1, years):
 		age = ages[i]
@@ -68,9 +80,7 @@ def project_retirement(inputs: Dict[str, Any]) -> Dict[str, Any]:
 		net_worth[i] = net_worth[i-1] * (1 + inputs["savings_growth"] / 100) + net_savings
 		expenses[i] = salary[i-1] - annual_savings
 		# Check if portfolio can support the desired retirement spending using 4% rule
-		# Calculate what the initial withdrawal would be at this portfolio value
 		potential_initial_withdrawal = net_worth[i] * (inputs["comfortable_withdrawal_rate"] / 100)
-		# Check if this withdrawal amount (in current dollars) can support the retirement spend
 		if financial_ready_age is None and potential_initial_withdrawal >= inputs["retirement_spend"]:
 			financial_ready_age = age
 	
@@ -107,38 +117,38 @@ def project_retirement(inputs: Dict[str, Any]) -> Dict[str, Any]:
 			expenses[i] = salary[i-1] - annual_savings
 			income[i] = salary[i]
 		else:
-			# Retirement years - Implement 4% rule with adjustable withdrawal rate
-			# Calculate years since retirement started
+			# Retirement years - Implement capped spending at inflation-adjusted target
 			years_since_retirement = age - retirement_age
-			
+
 			# Get the portfolio value at retirement (first retirement year)
 			if years_since_retirement == 0:
 				portfolio_at_retirement = net_worth[i-1]
-				# Calculate initial withdrawal amount based on 4% rule
-				# Use the comfortable_withdrawal_rate as the adjustable rate
 				withdrawal_rate = inputs["comfortable_withdrawal_rate"] / 100
 				initial_withdrawal = portfolio_at_retirement * withdrawal_rate
-				# Store the initial withdrawal amount for inflation adjustments
 				base_withdrawal_amount = initial_withdrawal
-			
+
 			# Apply inflation adjustment to the initial withdrawal amount
 			inflation_factor = (1 + inputs["inflation"] / 100) ** years_since_retirement
 			nominal_withdrawal = base_withdrawal_amount * inflation_factor
-			
+
+			# Calculate inflation-adjusted retirement spending cap
+			retirement_spend_cap = inputs["retirement_spend"] * inflation_factor
+			# Cap the withdrawal at the inflation-adjusted target
+			capped_withdrawal = min(nominal_withdrawal, retirement_spend_cap)
+
 			# Add 1/5th of the 5-year extra expense to every year of retirement
 			annual_extra_expense = inputs["extra_expense"] / 5
 			extra_expense_inflated = annual_extra_expense * inflation_factor
-			
+
 			# Add emergency fund expenditure during retirement (using the same percentage as working years)
-			# Use the nominal withdrawal as the "income" base for emergency fund calculation
-			emergency_expense_retirement = nominal_withdrawal * inputs["emergency_fund"] / 100
-			
+			emergency_expense_retirement = capped_withdrawal * inputs["emergency_fund"] / 100
+
 			# Total expenses for this year
-			expenses[i] = nominal_withdrawal + extra_expense_inflated + emergency_expense_retirement
-			
+			expenses[i] = capped_withdrawal + extra_expense_inflated + emergency_expense_retirement
+
 			# Apply tax adjustment
 			after_tax_expense = expenses[i] / (1 - inputs["retirement_tax"] / 100)
-			
+
 			# Update portfolio value
 			net_worth[i] = net_worth[i-1] * (1 + inputs["retirement_growth"] / 100) - after_tax_expense
 			income[i] = after_tax_expense  # Show the actual withdrawal amount needed (including taxes)
