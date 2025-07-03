@@ -9,7 +9,7 @@ import numpy as np
 
 # Local imports
 from inputs import get_user_inputs, validate_inputs
-from calculations import project_retirement, monte_carlo_simulation, sensitivity_analysis
+from calculations import project_retirement, monte_carlo_simulation
 from outputs import (
 	plot_net_worth_vs_time, plot_income_vs_expenses, 
 	export_simulation_details, plot_income_vs_expenses_real
