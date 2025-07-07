@@ -7,13 +7,14 @@ import numpy as np
 import pandas as pd
 
 # Local imports
-from utils import parse_salary_upgrades
+from utils import parse_salary_upgrades, parse_savings_rates
 
 # Constants for tooltips and descriptions
 StartingAgeTooltip = "Your current age in years."
 StartingFundTooltip = "Total current investable assets ($)."
 StartingSalaryTooltip = "Your current annual salary, including bonuses and stock vesting ($)."
 SavingRateTooltip = "Percent of salary saved each year (%)."
+VariableSavingRateTooltip = "Variable savings rates over time in format: 'age,rate;age,rate'. Example: '25,30;37,20.25' means 30% savings at age 25, 20.25% at age 37. If empty, uses the default saving rate above."
 TaxAdvantagedTooltip = "Percent of savings going to tax-advantaged accounts (e.g., 401k, Roth)."
 RaiseRateTooltip = "Expected average annual raise rate (%)."
 EmergencyFundTooltip = "Annual emergency fund expenditure as a percent of income during working years, and as a percent of retirement withdrawals during retirement (%)."
@@ -29,6 +30,20 @@ ComfortableWithdrawalTooltip = "The 4% rule withdrawal rate (e.g., 3-4%) used fo
 ExtraYearsOfWorkTooltip = "Number of years you plan to work past the minimum retirement age (after you could afford to retire)."
 MinRetirementAgeTooltip = "The minimum age at which retirement will be considered, regardless of financial readiness. Enable this to set a minimum retirement age."
 NormalizedSalaryCapTooltip = "Maximum allowed pre-retirement salary/income in current dollars (inflation-adjusted). Your salary, when normalized to current dollars, will not exceed this cap before retirement."
+
+
+def generate_default_salary_upgrades(starting_age: int) -> str:
+	"""
+	Generate default salary upgrades: 10% raises every 5 years from starting age until 50.
+	"""
+	upgrades = []
+	current_age = starting_age + 5  # Start 5 years from starting age
+	
+	while current_age <= 50:
+		upgrades.append(f"{current_age},raise,10")
+		current_age += 5
+	
+	return ";".join(upgrades)
 
 
 def get_user_inputs() -> Dict[str, Any]:
@@ -56,7 +71,18 @@ def get_user_inputs() -> Dict[str, Any]:
 		min_retirement_age = st.number_input("Minimum Retirement Age", min_value=starting_age, max_value=120, value=starting_age, help=MinRetirementAgeTooltip)
 	
 	st.subheader("Savings & Investment")
-	saving_rate = st.number_input("Saving Rate (%)", min_value=0.0, max_value=100.0, value=25.0, step=0.1, help=SavingRateTooltip)
+	saving_rate = st.number_input("Default Saving Rate (%)", min_value=0.0, max_value=100.0, value=25.0, step=0.1, help=SavingRateTooltip)
+	variable_saving_rates = st.text_input(
+		"Variable Saving Rates",
+		value="",
+		help=(
+			"Variable savings rates over time in format: 'age,rate;age,rate'. "
+			"Example: '25,30;37,20.25' means 30% savings at age 25, 20.25% at age 37. "
+			"If empty, uses the default saving rate above. "
+			"Use a semicolon to separate different ages. "
+			"(No % symbols, just numbers.)"
+		)
+	)
 	savings_growth = st.number_input("Savings Stock Growth Rate (%)", min_value=-10.0, max_value=20.0, value=7.0, step=0.1, help=SavingsGrowthTooltip)
 	retirement_growth = st.number_input("Retirement Stock Growth Rate (%)", min_value=-10.0, max_value=20.0, value=5.0, step=0.1, help=RetirementGrowthTooltip)
 	comfortable_withdrawal_rate = st.number_input("Comfortable Withdrawal Rate (%)", min_value=2.0, max_value=10.0, value=3.0, step=0.1, help=ComfortableWithdrawalTooltip)
@@ -64,9 +90,12 @@ def get_user_inputs() -> Dict[str, Any]:
 	st.subheader("Income Growth")
 	raise_rate = st.number_input("Raise Rate (%)", min_value=0.0, max_value=20.0, value=3.0, step=0.1, help=RaiseRateTooltip)
 	emergency_fund = st.number_input("Emergency Fund Expenditure (% of income)", min_value=0.0, max_value=50.0, value=2.5, step=0.1, help=EmergencyFundTooltip)
+	
+	# Generate default salary upgrades
+	default_upgrades = generate_default_salary_upgrades(starting_age)
 	salary_upgrades = st.text_input(
 		"Salary Upgrades",
-		value="",
+		value=default_upgrades,
 		help=(
 			"Expected salary upgrades in format: 'age,type,value;age,type,value'. "
 			"Types: 'raise' (percentage) or 'absolute' (dollar amount). "
@@ -95,6 +124,7 @@ def get_user_inputs() -> Dict[str, Any]:
 		"extra_years_of_work": extra_years_of_work,
 		"min_retirement_age": min_retirement_age,
 		"saving_rate": saving_rate,
+		"variable_saving_rates": variable_saving_rates,
 		"savings_growth": savings_growth,
 		"retirement_growth": retirement_growth,
 		"comfortable_withdrawal_rate": comfortable_withdrawal_rate,
@@ -154,6 +184,18 @@ def validate_inputs(inputs: Dict[str, Any]) -> Tuple[bool, str]:
 					return False, f"Salary upgrade value must be positive."
 		except Exception as e:
 			return False, f"Invalid salary upgrades format. Use: 'age,type,value;age,type,value'. Error: {str(e)}"
+	
+	# Validate variable savings rates format
+	if inputs["variable_saving_rates"].strip():
+		try:
+			rates = parse_savings_rates(inputs["variable_saving_rates"])
+			for age, rate in rates:
+				if age < inputs["starting_age"] or age > inputs["final_age"]:
+					return False, f"Variable savings rate age {age} must be between starting age and final age."
+				if rate < 0 or rate > 100:
+					return False, f"Variable savings rate must be between 0 and 100%."
+		except Exception as e:
+			return False, f"Invalid variable savings rates format. Use: 'age,rate;age,rate'. Error: {str(e)}"
 	
 	# Logical consistency checks
 	if inputs["retirement_spend"] <= 0:

@@ -7,7 +7,7 @@ import pandas as pd
 from scipy.stats import norm
 
 # Local imports
-from utils import parse_salary_upgrades
+from utils import parse_salary_upgrades, parse_savings_rates, get_savings_rate_at_age
 
 # Constants
 MonteCarloRuns = 2500
@@ -27,9 +27,11 @@ def project_retirement(inputs: Dict[str, Any]) -> Dict[str, Any]:
 	net_worth = np.zeros(years)
 	expenses = np.zeros(years)
 	
-	# Parse salary upgrades
+	# Parse salary upgrades and savings rates
 	salary_upgrades = parse_salary_upgrades(inputs["salary_upgrades"])
 	upgrade_dict = {age: (upgrade_type, value) for age, upgrade_type, value in salary_upgrades}
+	
+	savings_rates = parse_savings_rates(inputs["variable_saving_rates"])
 	
 	# Project salary over time
 	current_salary = inputs["starting_salary"]
@@ -64,7 +66,8 @@ def project_retirement(inputs: Dict[str, Any]) -> Dict[str, Any]:
 	# Project net worth and expenses
 	net_worth[0] = inputs["starting_fund"]
 	# Calculate savings and expenses for the first year
-	annual_savings_0 = salary[0] * inputs["saving_rate"] / 100
+	current_savings_rate = get_savings_rate_at_age(ages[0], savings_rates, inputs["saving_rate"])
+	annual_savings_0 = salary[0] * current_savings_rate / 100
 	emergency_expense_0 = salary[0] * inputs["emergency_fund"] / 100
 	net_savings_0 = annual_savings_0 - emergency_expense_0
 	expenses[0] = salary[0] - annual_savings_0
@@ -74,7 +77,8 @@ def project_retirement(inputs: Dict[str, Any]) -> Dict[str, Any]:
 	financial_ready_age = None
 	for i in range(1, years):
 		age = ages[i]
-		annual_savings = salary[i-1] * inputs["saving_rate"] / 100
+		current_savings_rate = get_savings_rate_at_age(age, savings_rates, inputs["saving_rate"])
+		annual_savings = salary[i-1] * current_savings_rate / 100
 		emergency_expense = salary[i-1] * inputs["emergency_fund"] / 100
 		net_savings = annual_savings - emergency_expense
 		net_worth[i] = net_worth[i-1] * (1 + inputs["savings_growth"] / 100) + net_savings
@@ -110,7 +114,8 @@ def project_retirement(inputs: Dict[str, Any]) -> Dict[str, Any]:
 		force_retirement_age = age if retired and 'force_retirement_age' not in locals() else None
 		if not retired:
 			# Working years
-			annual_savings = salary[i-1] * inputs["saving_rate"] / 100
+			current_savings_rate = get_savings_rate_at_age(age, savings_rates, inputs["saving_rate"])
+			annual_savings = salary[i-1] * current_savings_rate / 100
 			emergency_expense = salary[i-1] * inputs["emergency_fund"] / 100
 			net_savings = annual_savings - emergency_expense
 			net_worth[i] = net_worth[i-1] * (1 + inputs["savings_growth"] / 100) + net_savings

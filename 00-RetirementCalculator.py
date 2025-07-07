@@ -15,6 +15,7 @@ from outputs import (
 	plot_net_worth_vs_time, plot_income_vs_expenses, 
 	export_simulation_details, plot_income_vs_expenses_real
 )
+from utils import parse_savings_rates
 
 st.title("Retirement Calculator")
 st.markdown("""
@@ -27,6 +28,22 @@ show_net_worth_plot = st.sidebar.toggle("Net Worth vs Time Plot", value=True)
 show_income_expense_plot = st.sidebar.toggle("Income vs Expenses Plot", value=True)
 show_monte_carlo_results = st.sidebar.toggle("Monte Carlo Results", value=True)
 show_salary_plot = st.sidebar.toggle("Salary vs Time Plot", value=True)
+
+def adjust_savings_rates(variable_savings_rates: str, delta: float) -> str:
+	"""
+	Adjust all savings rates in the variable savings rates string by the delta amount.
+	"""
+	if not variable_savings_rates.strip():
+		return ""
+	
+	rates = parse_savings_rates(variable_savings_rates)
+	adjusted_rates = []
+	
+	for age, rate in rates:
+		adjusted_rate = max(0, min(100, rate + delta))
+		adjusted_rates.append(f"{age},{adjusted_rate}")
+	
+	return ";".join(adjusted_rates)
 
 # Get user inputs
 inputs = get_user_inputs()
@@ -110,11 +127,13 @@ else:
 		results = []
 		for delta in deltas:
 			test_inputs = inputs.copy()
+			# Adjust both default savings rate and variable savings rates
 			test_inputs["saving_rate"] = max(0, min(100, inputs["saving_rate"] + delta))
+			test_inputs["variable_saving_rates"] = adjust_savings_rates(inputs["variable_saving_rates"], delta)
 			proj = project_retirement(test_inputs)
 			results.append({
 				"Delta": f"{delta:+d}%",
-				"Savings Rate": test_inputs["saving_rate"],
+				"Default Savings Rate": test_inputs["saving_rate"],
 				"Retirement Age": proj["retirement_age"],
 				"Final Net Worth": proj["net_worth"][-1]
 			})
