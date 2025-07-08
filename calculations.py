@@ -139,10 +139,8 @@ def project_retirement(inputs: Dict[str, Any]) -> Dict[str, Any]:
 			nominal_withdrawal = base_withdrawal_amount * inflation_factor
 
 			# Calculate inflation-adjusted retirement spending cap
-			# First inflate retirement_spend from starting age to retirement age
-			retirement_spend_at_retirement = inputs["retirement_spend"] * ((1 + inputs["inflation"] / 100) ** (retirement_age - inputs["starting_age"]))
-			# Then apply year-by-year inflation from retirement age
-			retirement_spend_cap = retirement_spend_at_retirement * inflation_factor
+			# Inflate retirement_spend from starting age to current age (total inflation)
+			retirement_spend_cap = inputs["retirement_spend"] * ((1 + inputs["inflation"] / 100) ** (age - inputs["starting_age"]))
 			# Cap the withdrawal at the inflation-adjusted target
 			capped_withdrawal = min(nominal_withdrawal, retirement_spend_cap)
 

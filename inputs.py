@@ -34,13 +34,13 @@ NormalizedSalaryCapTooltip = "Maximum allowed pre-retirement salary/income in cu
 
 def generate_default_salary_upgrades(starting_age: int) -> str:
 	"""
-	Generate default salary upgrades: 10% raises every 5 years from starting age until 50.
+	Generate default salary upgrades: 7% raises every 5 years from starting age until 50.
 	"""
 	upgrades = []
 	current_age = starting_age + 5  # Start 5 years from starting age
 	
 	while current_age <= 50:
-		upgrades.append(f"{current_age},raise,10")
+		upgrades.append(f"{current_age},raise,7")
 		current_age += 5
 	
 	return ";".join(upgrades)
@@ -83,8 +83,8 @@ def get_user_inputs() -> Dict[str, Any]:
 			"(No % symbols, just numbers.)"
 		)
 	)
-	savings_growth = st.number_input("Savings Stock Growth Rate (%)", min_value=-10.0, max_value=20.0, value=7.0, step=0.1, help=SavingsGrowthTooltip)
-	retirement_growth = st.number_input("Retirement Stock Growth Rate (%)", min_value=-10.0, max_value=20.0, value=5.0, step=0.1, help=RetirementGrowthTooltip)
+	savings_growth = st.number_input("Savings Stock Growth Rate (%)", min_value=-10.0, max_value=50.0, value=7.0, step=0.1, help=SavingsGrowthTooltip)
+	retirement_growth = st.number_input("Retirement Stock Growth Rate (%)", min_value=-10.0, max_value=50.0, value=5.0, step=0.1, help=RetirementGrowthTooltip)
 	comfortable_withdrawal_rate = st.number_input("Comfortable Withdrawal Rate (%)", min_value=2.0, max_value=10.0, value=3.0, step=0.1, help=ComfortableWithdrawalTooltip)
 	
 	st.subheader("Income Growth")
@@ -107,8 +107,8 @@ def get_user_inputs() -> Dict[str, Any]:
 	)
 	
 	st.subheader("Retirement Planning")
-	retirement_spend = st.number_input("Estimated Retirement Spend ($)", min_value=0, max_value=500_000, value=60000, step=1000, help=RetirementSpendTooltip)
-	extra_expense = st.number_input("5-Year Retirement 'Extra' Expense ($)", min_value=0, max_value=500_000, value=5000, step=1000, help=ExtraExpenseTooltip)
+	retirement_spend = st.number_input("Estimated Retirement Spend ($)", min_value=0, max_value=500_000, value=125_000, step=100, help=RetirementSpendTooltip)
+	extra_expense = st.number_input("5-Year Retirement 'Extra' Expense ($)", min_value=0, max_value=500_000, value=5000, step=100, help=ExtraExpenseTooltip)
 	retirement_tax = st.number_input("Estimated Retirement Tax Rate (%)", min_value=0.0, max_value=50.0, value=9.0, step=0.1, help=RetirementTaxTooltip)
 	
 	st.subheader("Assumptions")
