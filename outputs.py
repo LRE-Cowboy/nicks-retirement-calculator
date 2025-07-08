@@ -27,18 +27,15 @@ def plot_income_vs_expenses(projection: Dict[str, Any]) -> None:
 
 
 def plot_income_vs_expenses_real(projection: Dict[str, Any], inputs: Dict[str, Any]) -> None:
-	"""Plot income and expenses vs time, normalized to current day dollars. Retirement years are normalized from retirement_age."""
+	"""Plot income and expenses vs time, normalized to current day dollars (starting age dollars)."""
 	ages = projection["ages"]
 	income = projection["income"]
 	expenses = projection["expenses"]
-	retirement_age = projection["retirement_age"]
-	# Compute cumulative inflation for each year, but for retirement years, inflation is from retirement_age
+	starting_age = inputs["starting_age"]
+	# Compute cumulative inflation from starting age to each year
 	cumulative_inflation = np.ones(len(ages))
-	for i in range(1, len(ages)):
-		if ages[i] < retirement_age:
-			cumulative_inflation[i] = cumulative_inflation[i-1] * (1 + inputs["inflation"] / 100)
-		else:
-			cumulative_inflation[i] = (1 + inputs["inflation"] / 100) ** (ages[i] - retirement_age)
+	for i in range(len(ages)):
+		cumulative_inflation[i] = (1 + inputs["inflation"] / 100) ** (ages[i] - starting_age)
 	income_real = income / cumulative_inflation
 	expenses_real = expenses / cumulative_inflation
 	fig = go.Figure()

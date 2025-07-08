@@ -85,7 +85,7 @@ def get_user_inputs() -> Dict[str, Any]:
 	)
 	savings_growth = st.number_input("Savings Stock Growth Rate (%)", min_value=-10.0, max_value=50.0, value=7.0, step=0.1, help=SavingsGrowthTooltip)
 	retirement_growth = st.number_input("Retirement Stock Growth Rate (%)", min_value=-10.0, max_value=50.0, value=5.0, step=0.1, help=RetirementGrowthTooltip)
-	comfortable_withdrawal_rate = st.number_input("Comfortable Withdrawal Rate (%)", min_value=2.0, max_value=10.0, value=3.0, step=0.1, help=ComfortableWithdrawalTooltip)
+	comfortable_withdrawal_rate = st.number_input("Comfortable Withdrawal Rate (%)", min_value=2.0, max_value=10.0, value=4.0, step=0.1, help=ComfortableWithdrawalTooltip)
 	
 	st.subheader("Income Growth")
 	raise_rate = st.number_input("Raise Rate (%)", min_value=0.0, max_value=20.0, value=3.0, step=0.1, help=RaiseRateTooltip)
