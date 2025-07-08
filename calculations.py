@@ -85,7 +85,9 @@ def project_retirement(inputs: Dict[str, Any]) -> Dict[str, Any]:
 		expenses[i] = salary[i-1] - annual_savings
 		# Check if portfolio can support the desired retirement spending using 4% rule
 		potential_initial_withdrawal = net_worth[i] * (inputs["comfortable_withdrawal_rate"] / 100)
-		if financial_ready_age is None and potential_initial_withdrawal >= inputs["retirement_spend"]:
+		# Inflate retirement_spend from starting age to current age for comparison
+		retirement_spend_at_age = inputs["retirement_spend"] * ((1 + inputs["inflation"] / 100) ** (age - inputs["starting_age"]))
+		if financial_ready_age is None and potential_initial_withdrawal >= retirement_spend_at_age:
 			financial_ready_age = age
 	
 	# Determine retirement age based on selected mode
@@ -137,7 +139,10 @@ def project_retirement(inputs: Dict[str, Any]) -> Dict[str, Any]:
 			nominal_withdrawal = base_withdrawal_amount * inflation_factor
 
 			# Calculate inflation-adjusted retirement spending cap
-			retirement_spend_cap = inputs["retirement_spend"] * inflation_factor
+			# First inflate retirement_spend from starting age to retirement age
+			retirement_spend_at_retirement = inputs["retirement_spend"] * ((1 + inputs["inflation"] / 100) ** (retirement_age - inputs["starting_age"]))
+			# Then apply year-by-year inflation from retirement age
+			retirement_spend_cap = retirement_spend_at_retirement * inflation_factor
 			# Cap the withdrawal at the inflation-adjusted target
 			capped_withdrawal = min(nominal_withdrawal, retirement_spend_cap)
 
